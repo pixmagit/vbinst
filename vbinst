@@ -57,17 +57,17 @@ mkdir /var/www
 mkdir /var/www/phpvirtualbox
 git clone https://github.com/phpvirtualbox/phpvirtualbox
 mv ./phpvirtualbox/* /var/www/phpvirtualbox
-wget --no-check-certificate -O /var/www/phpvirtualbox/config.php https://raw.githubusercontent.com/petranikin/vbinst/master/config.php-vbox
+wget --no-check-certificate -O /var/www/phpvirtualbox/config.php https://raw.githubusercontent.com/pixmagit/vbinst/master/config.php-vbox
 sed -i -e "s|vboxpassword|${password}|g" /var/www/phpvirtualbox/config.php
 sed -i -e "s|ipaddr|${ip}|g" /var/www/phpvirtualbox/config.php
 
 # settings nginx
 if [ "$rls" == "jessie" ]||[ "$rls" == "trusty" ]; then
 	apt-get install nginx php5-common php5-fpm php-pear -y
-        wget --no-check-certificate -O /etc/nginx/conf.d/phpvirtualbox.conf https://raw.githubusercontent.com/petranikin/vbinst/master/sslvbox.conf
+        wget --no-check-certificate -O /etc/nginx/conf.d/phpvirtualbox.conf https://raw.githubusercontent.com/pixmagit/vbinst/master/sslvbox.conf
 else
 	apt-get install nginx php-common php-fpm php-pear php-soap -y
-        wget --no-check-certificate -O /etc/nginx/conf.d/phpvirtualbox.conf https://raw.githubusercontent.com/petranikin/vbinst/master/sslvbox7.conf
+        wget --no-check-certificate -O /etc/nginx/conf.d/phpvirtualbox.conf https://raw.githubusercontent.com/pixmagit/vbinst/master/sslvbox7.conf
 fi
 sed -i -e "s|ipaddr|${ip}|g" /etc/nginx/conf.d/phpvirtualbox.conf
 
@@ -85,7 +85,7 @@ service nginx restart
 
 #change password
 phpvbpass=`date +%s | sha256sum | base64 | head -c 16`
-wget --no-check-certificate -O /var/www/phpvirtualbox/recovery.php https://raw.githubusercontent.com/petranikin/vbinst/master/recovery.php-disabled
+wget --no-check-certificate -O /var/www/phpvirtualbox/recovery.php https://raw.githubusercontent.com/pixmagit/vbinst/master/recovery.php-disabled
 sed -i -e "s|vboxpassword|${phpvbpass}|g" /var/www/phpvirtualbox/recovery.php
 curl -k https://$ip:2017/recovery.php
 rm -f /var/www/phpvirtualbox/recovery.php
@@ -100,7 +100,7 @@ echo "login: admin"
 echo "password: $phpvbpass"
 echo "--------------------"
 echo "--------------------"
-echo -e "\033[0;31mPlease donate me some money:\033[0m https://anikin.pw/donate.html"
+echo -e "Enjoy"
 echo "--------------------"
 
 else
