@@ -1,0 +1,112 @@
+#!/bin/bash
+
+# check root
+if [[ $EUID -ne 0 ]]; then
+    echo "This script must be run as root"
+    exit 0
+fi
+
+#check os
+apt-get update
+apt-get install wget -y
+apt-get install unzip -y
+apt-get install lsb-release -y
+apt-get install linux-headers-`echo $(uname -r)` -y
+apt-get install openssl -y
+apt-get install curl -y
+apt-get install net-tools -y
+apt-get install git -y
+
+rls=`echo $(lsb_release -sc)`
+if [ "$rls" == "xenial" ]||[ "$rls" == "stretch" ]||[ "$rls" == "trusty" ]||[ "$rls" == "jessie" ]; then
+
+# install virtualbox
+echo "deb http://download.virtualbox.org/virtualbox/debian $rls contrib" | tee -a /etc/apt/sources.list
+wget --no-check-certificate -q https://www.virtualbox.org/download/oracle_vbox.asc -O- | apt-key add -
+wget --no-check-certificate -q https://www.virtualbox.org/download/oracle_vbox_2016.asc -O- | apt-key add -
+apt-get update
+apt-get install dkms virtualbox-6.1 -y
+
+version=`vboxwebsrv -V`
+ver=`echo $version|awk -F "r" '{print $1}'`
+sub=`echo $version|awk -F "r" '{print $2}'`
+
+#install extpack
+wget --no-check-certificate http://download.virtualbox.org/virtualbox/$ver/Oracle_VM_VirtualBox_Extension_Pack-$ver-$sub.vbox-extpack
+VBoxManage extpack install Oracle_VM_VirtualBox_Extension_Pack-$ver-$sub.vbox-extpack
+
+# create user vbox
+password=`date +%s | sha256sum | base64 | head -c 16`
+mkdir /home/vbox
+useradd vbox -d /home/vbox
+echo -e "${password}\n${password}\n" | passwd vbox
+chown vbox:vbox -R /home/vbox
+usermod -a -G vboxusers 'vbox'
+
+# settings web service
+ip=`ifconfig | grep -Eo 'inet (addr:)?([0-9]*\.){3}[0-9]*' | grep -Eo '([0-9]*\.){3}[0-9]*' | grep -v '127.0.0.1'`
+touch /etc/default/virtualbox
+echo "VBOXWEB_USER=vbox" > /etc/default/virtualbox
+echo "VBOXWEB_HOST=${ip}" >> /etc/default/virtualbox
+echo "VBOXWEB_PORT=18083" >> /etc/default/virtualbox
+service vboxweb-service stop
+service vboxweb-service start
+
+#install PhpVirtualBox
+mkdir /var/www
+mkdir /var/www/phpvirtualbox
+git clone https://github.com/phpvirtualbox/phpvirtualbox
+mv ./phpvirtualbox/* /var/www/phpvirtualbox
+wget --no-check-certificate -O /var/www/phpvirtualbox/config.php https://raw.githubusercontent.com/petranikin/vbinst/master/config.php-vbox
+sed -i -e "s|vboxpassword|${password}|g" /var/www/phpvirtualbox/config.php
+sed -i -e "s|ipaddr|${ip}|g" /var/www/phpvirtualbox/config.php
+
+# settings nginx
+if [ "$rls" == "jessie" ]||[ "$rls" == "trusty" ]; then
+	apt-get install nginx php5-common php5-fpm php-pear -y
+        wget --no-check-certificate -O /etc/nginx/conf.d/phpvirtualbox.conf https://raw.githubusercontent.com/petranikin/vbinst/master/sslvbox.conf
+else
+	apt-get install nginx php-common php-fpm php-pear php-soap -y
+        wget --no-check-certificate -O /etc/nginx/conf.d/phpvirtualbox.conf https://raw.githubusercontent.com/petranikin/vbinst/master/sslvbox7.conf
+fi
+sed -i -e "s|ipaddr|${ip}|g" /etc/nginx/conf.d/phpvirtualbox.conf
+
+#generate certificate
+openssl genrsa -out /root/certificate.key 1024
+openssl rsa -in /root/certificate.key -out /root/certificate.pem
+mv /root/certificate.key /root/certificate.key_pass
+mv /root/certificate.pem /root/certificate.key
+openssl req -new -key /root/certificate.key -out /root/certificate.csr -subj "/C=RU/ST=IV/L=IV/O=vps-server/OU=vps-server/CN=vps-server"
+openssl x509 -req -days 365 -in /root/certificate.csr -signkey /root/certificate.key -out /root/certificate.crt
+mkdir /etc/nginx/ssl
+mv /root/certificate.* /etc/nginx/ssl/
+
+service nginx restart
+
+#change password
+phpvbpass=`date +%s | sha256sum | base64 | head -c 16`
+wget --no-check-certificate -O /var/www/phpvirtualbox/recovery.php https://raw.githubusercontent.com/petranikin/vbinst/master/recovery.php-disabled
+sed -i -e "s|vboxpassword|${phpvbpass}|g" /var/www/phpvirtualbox/recovery.php
+curl -k https://$ip:2017/recovery.php
+rm -f /var/www/phpvirtualbox/recovery.php
+
+echo " "
+echo "--------------------"
+echo "VirtualBox installed"
+echo "--------------------"
+echo "Web-interface:"
+echo "https://$ip:2017/"
+echo "login: admin"
+echo "password: $phpvbpass"
+echo "--------------------"
+echo "--------------------"
+echo -e "\033[0;31mPlease donate me some money:\033[0m https://anikin.pw/donate.html"
+echo "--------------------"
+
+else
+echo "--------------------------------------------------------"
+echo "This script only for debian 8,9 and ubuntu 14.04, 16.04"
+echo "exit"
+echo "--------------------------------------------------------"
+exit 0
+fi

@@ -1,0 +1,51 @@
+<?php
+/*
+
+	phpVirtualBox admin password recovery.
+	
+	Rename recovery.php-disabled to recovery.php, navigate to it in your web
+	browser and follow the instructions presented.
+	
+*/
+
+# Turn off PHP errors
+error_reporting(E_ALL & ~E_NOTICE & ~E_STRICT & ~E_WARNING);
+
+
+//Set no caching
+header("Expires: Mon, 26 Jul 1997 05:00:00 GMT");
+header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT");
+header("Cache-Control: no-store, no-cache, must-revalidate, post-check=0, pre-check=0");
+header("Pragma: no-cache");
+
+require_once(dirname(__FILE__).'/endpoints/lib/config.php');
+require_once(dirname(__FILE__).'/endpoints/lib/utils.php');
+require_once(dirname(__FILE__).'/endpoints/lib/vboxconnector.php');
+
+
+/*
+ * Clean request
+ */
+$vboxRequest = clean_request();
+
+/* Check for recovery */
+
+	
+	try {
+		// Use main / auth server
+		$vbox = new vboxconnector(true);
+		$vbox->skipSessionCheck = true;
+		$vbox->connect();
+		
+		$vbox->vbox->setExtraData('phpvb/users/admin/pass', hash('sha512', 'vboxpassword'));		
+		$vbox->vbox->setExtraData('phpvb/users/admin/admin', '1');	
+		echo("OK");
+		
+	} catch (Exception $e) {
+		echo("<pre>");
+		print_r($e);
+		echo("</pre>");
+	}
+	return;
+
+?>
