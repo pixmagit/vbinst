@@ -18,7 +18,7 @@ apt-get install net-tools -y
 apt-get install git -y
 
 rls=`echo $(lsb_release -sc)`
-if [ "$rls" == "focal" ]||[ "$rls" == "buster" ]||[ "$rls" == "xenial" ]||[ "$rls" == "stretch" ]||[ "$rls" == "trusty" ]||[ "$rls" == "jessie" ]; then
+if [ "$rls" == "xenial" ]||[ "$rls" == "stretch" ]||[ "$rls" == "trusty" ]||[ "$rls" == "jessie" ]; then
 
 # install virtualbox
 echo "deb http://download.virtualbox.org/virtualbox/debian $rls contrib" | tee -a /etc/apt/sources.list
@@ -66,7 +66,7 @@ if [ "$rls" == "jessie" ]||[ "$rls" == "trusty" ]; then
 	apt-get install nginx php5-common php5-fpm php-pear -y
         wget --no-check-certificate -O /etc/nginx/conf.d/phpvirtualbox.conf https://raw.githubusercontent.com/pixmagit/vbinst/master/sslvbox.conf
 else
-	apt-get install nginx php7.4-common php7.4-fpm php-pear php7.4-soap -y
+	apt-get install nginx php-common php-fpm php-pear php-soap -y
         wget --no-check-certificate -O /etc/nginx/conf.d/phpvirtualbox.conf https://raw.githubusercontent.com/pixmagit/vbinst/master/sslvbox7.conf
 fi
 sed -i -e "s|ipaddr|${ip}|g" /etc/nginx/conf.d/phpvirtualbox.conf
@@ -105,7 +105,7 @@ echo "--------------------"
 
 else
 echo "--------------------------------------------------------"
-echo "This script only for debian 8,9,10 and ubuntu 14.04, 16.04, 20.04"
+echo "This script only for debian 8,9 and ubuntu 14.04, 16.04"
 echo "exit"
 echo "--------------------------------------------------------"
 exit 0
