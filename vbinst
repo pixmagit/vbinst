@@ -18,7 +18,7 @@ apt-get install net-tools -y
 apt-get install git -y
 
 rls=`echo $(lsb_release -sc)`
-if [ "$rls" == "focal" ]||[ "$rls" == "xenial" ]||[ "$rls" == "stretch" ]||[ "$rls" == "trusty" ]||[ "$rls" == "jessie" ]; then
+if [ "$rls" == "xenial" ]||[ "$rls" == "stretch" ]||[ "$rls" == "trusty" ]||[ "$rls" == "jessie" ]; then
 
 # install virtualbox
 echo "deb http://download.virtualbox.org/virtualbox/debian $rls contrib" | tee -a /etc/apt/sources.list
