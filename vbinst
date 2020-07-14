@@ -66,7 +66,7 @@ if [ "$rls" == "jessie" ]||[ "$rls" == "trusty" ]; then
 	apt-get install nginx php5-common php5-fpm php-pear -y
         wget --no-check-certificate -O /etc/nginx/conf.d/phpvirtualbox.conf https://raw.githubusercontent.com/pixmagit/vbinst/master/sslvbox.conf
 else
-	apt-get install nginx php7.4-common php7.4-fpm php7.4-pear php7.4-soap -y
+	apt-get install nginx php7.0-common php7.0-fpm php7.0-pear php7.0-soap -y
         wget --no-check-certificate -O /etc/nginx/conf.d/phpvirtualbox.conf https://raw.githubusercontent.com/pixmagit/vbinst/master/sslvbox7.conf
 fi
 sed -i -e "s|ipaddr|${ip}|g" /etc/nginx/conf.d/phpvirtualbox.conf
